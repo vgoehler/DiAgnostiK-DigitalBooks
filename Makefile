@@ -57,7 +57,7 @@ $(IMAGEDIR)/%-rotate.stamp: $(IMAGEDIR)/%-cropped.stamp
 	@echo "Rotating images for $*..."
 	@case "$*" in (front|back)\
 		if [ "$*" = "front" ] && [ "$(ROTATE_FRONT)" -eq "1" ] || \
-		   [ "$*" = "back"  ] && [ "$(ROTATE_BACK)" -eq "1" ]; then \
+		   ( [ "$*" = "back"  ] && [ "$(ROTATE_BACK)" -eq "1" ] ); then \
 			for img in $(IMAGEDIR)/$*-*-cropped.png; do \
 				echo "  Rotating $$img in place"; \
 				convert $$img -rotate 180 +repage $$img; \
@@ -66,14 +66,6 @@ $(IMAGEDIR)/%-rotate.stamp: $(IMAGEDIR)/%-cropped.stamp
 		;; \
 	esac
 	@touch $@
-
-# to rotate
-$(IMAGEDIR)/front-cropped.png:  $(IMAGEDIR)/front-extract.stamp
-	@echo "special"
-	convert $< -rotate 180 -trim +repage $@
-
-$(IMAGEDIR)/back-cropped.png: $(IMAGEDIR)/back-000.png $(IMAGEDIR)/%-extract.stamp
-	convert $< -rotate 180 -trim +repage $@
 
 crop-%: $(IMAGEDIR)/%-cropped.stamp
 	@echo "$* cropped"
