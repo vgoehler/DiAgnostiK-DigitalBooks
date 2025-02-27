@@ -8,6 +8,10 @@
 
     - for ocr: `ocrmypdf -l deu`
 
+- `apt-get install unpaper`
+
+    - for ocr: `ocrmypdf --clean`
+
 - `apt install ghostscript`
 
     - for `gs`
