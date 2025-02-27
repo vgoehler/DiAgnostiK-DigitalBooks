@@ -1,6 +1,6 @@
 .PHONY: all
 .PHONY: clean-pdf clean
-.PHONY: *.extract *.crop *.rotate compress
+.PHONY: *.extract *.crop *.rotate compress ocr
 .SECONDEXPANSION:
 
 # Final output PDF
@@ -97,7 +97,10 @@ process: create_final crop2pdf crop_all extract_all
 	@echo "Master Process Done"
 
 compress: $(OUTPUT)
-	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/screen -dNOPAUSE -dQUIET -dBATCH -sOutputFile=$<_compressed.pdf $<
+	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/screen -dNOPAUSE -dQUIET -dBATCH -sOutputFile=$(basename $<)_compressed.pdf $<
+
+ocr: $(OUTPUT)
+	ocrmypdf -l deu --optimize 1 --deskew --clean --output-type pdfa $< $(basename $<)_ocr.pdf --sidecar $(basename $<).txt
 
 
 # === Clean-up ===
