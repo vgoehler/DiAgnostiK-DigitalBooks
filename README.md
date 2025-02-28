@@ -49,7 +49,10 @@ graph TD;
     A[Project Root] -->|Parent Makefile| B(Makefile)
     A --> C[Book]
     C -->|Book Makefile| D[Makefile]
-    C -->|Source Files| E[source]
+    C -->|Source PDFs| E[source]
+    E -->|Cover| F[Front*]
+    E -->|scanned pages| G[scan*]
+    E -->|Back| H[Back*]
 ```
 
 The Makefile in the *book* folder contains just the parameters. Or run `remake -c` from the *book* folder with no Makefile.
