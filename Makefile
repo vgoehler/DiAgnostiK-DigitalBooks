@@ -115,6 +115,7 @@ $(OCR_OUTPUT): $(OPT_OUTPUT)
 # === Clean-up ===
 clean:
 	rm -rf $(IMAGEDIR) $(PROCESSDIR)
+	rm -rf $(OUTPUT) $(OPT_OUTPUT)
 
 clean-pdf:
 	rm -rf $(basename $(OUTPUT))*
