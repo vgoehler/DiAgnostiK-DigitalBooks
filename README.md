@@ -41,7 +41,7 @@ A makefile to clean up, stitch together, and read a scanned book.
 
 ### Usage
 
-Use `make` (or better `remake`) to built the whole Project. The scans have to be positioned in the *source* folder of the book. Run in the book folder.
+Use `make` (or better `remake`) to built the whole Project. The scans have to be positioned in the *source* folder of the book. Run `make` from the books folder.
 
 
 ```mermaid
@@ -52,7 +52,7 @@ graph TD;
     C -->|Source Files| E[source]
 ```
 
-In the *book* folder the Makefile only contains the set parameters. Or run `remake -c` from the *book* folder.
+The Makefile in the *book* folder contains just the parameters. Or run `remake -c` from the *book* folder with no Makefile.
 
 ### Parameters
 
