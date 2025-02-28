@@ -8,8 +8,8 @@ OPTIMIZE ?= 3
 #
 # Final output PDF
 OUTPUT ?= output.pdf
-OPT_OUTPUT := $(basename $OUTPUT)_opt$(OPTIMIZE).pdf
-OCR_OUTPUT := $(basename $OPT_OUTPUT)_ocr.pdf
+OPT_OUTPUT := $(basename $(OUTPUT))_opt$(OPTIMIZE).pdf
+OCR_OUTPUT := $(basename $(OPT_OUTPUT))_ocr.pdf
 
 # Temporary directories for extracted images and processed (cropped) PDFs
 IMAGEDIR := extracted_images
