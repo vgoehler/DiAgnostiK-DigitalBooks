@@ -103,13 +103,14 @@ $(OUTPUT): $(FINAL_PDFS)
 	pdfunite $(FINAL_PDFS) $(OUTPUT)
 
 $(OPT_OUTPUT): $(OUTPUT)
+	@echo "Optimize images in $(OUTPUT)"
 	ocrmypdf --tesseract-timeout=0 --optimize $(OPTIMIZE) --deskew --skip-text $< $@
 
+# doing OCR on all text pages, excluding title and back
+LAST_PAGE = $(shell pdfinfo "$(OUTPUT)" | grep "Pages" | awk '{print $$2}')
 $(OCR_OUTPUT): $(OPT_OUTPUT)
-	pdfinfo $(OUTPUT) \
-	last_page=$$(pdfinfo "$(OUTPUT)" | grep "Pages" | awk '{print $$2}') \
-	echo $$last_page \
-	ocrmypdf -l deu --optimize 1 --deskew --clean --pages 2-$$((last_page-1)) --output-type pdfa $< $@ --sidecar $(basename $@).txt
+	@echo "Doing OCR on $(OPT_OUTPUT)"
+	ocrmypdf -l deu --optimize $(OPTIMIZE) --deskew --clean --pages 2-$$(($(LAST_PAGE)-1)) --output-type pdfa $< $@ --sidecar $(basename $@).txt
 
 # === Clean-up ===
 clean:
