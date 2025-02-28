@@ -4,7 +4,7 @@
 
 # Optimization Lvl
 
-OPTIMIZE ?= 3
+OPTIMIZE ?= 1
 #
 # Final output PDF
 OUTPUT ?= output.pdf
