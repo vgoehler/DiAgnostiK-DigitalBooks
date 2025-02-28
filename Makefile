@@ -1,14 +1,19 @@
 .PHONY: all
-.PHONY: clean-pdf clean
+.PHONY: clean-pdf clean clean-all
 .PHONY: *.extract *.crop *.rotate compress ocr
-.SECONDEXPANSION:
 
+# Optimization Lvl
+
+OPTIMIZE ?= 3
+#
 # Final output PDF
 OUTPUT ?= output.pdf
+OPT_OUTPUT := $(basename $OUTPUT)_opt$(OPTIMIZE).pdf
+OCR_OUTPUT := $(basename $OPT_OUTPUT)_ocr.pdf
 
 # Temporary directories for extracted images and processed (cropped) PDFs
 IMAGEDIR := extracted_images
-CROPPEDDIR := cropped_pdfs
+PROCESSDIR := cropped_pdfs
 SRC := source
 
 # Flags for Rotation
@@ -16,31 +21,36 @@ SRC := source
 ROTATE_FRONT ?= 0
 ROTATE_BACK ?= 0
 
+
 # Files
 FILES := $(sort $(wildcard $(SRC)/*.pdf ))
 # separate Files in front, middle and back
 FRONT := $(wildcard $(SRC)/*[fF]ront*.pdf)
 BACK := $(wildcard $(SRC)/*[bB]ack*.pdf)
 MIDDLE := $(filter-out $(FRONT) $(BACK), $(FILES))
-# Order: Front first, then middle, then back
-ORDERED = $(FRONT) $(MIDDLE) $(BACK)
 
-# It converts each source PDF in ORDERED into its corresponding cropped PDF.
-FINAL_PDFS := $(patsubst $(SRC)/%.pdf,$(CROPPEDDIR)/%-cropped.pdf,$(ORDERED))
+TO_PROCESS := $(FRONT) $(BACK)
 
-all: $(OUTPUT)
+FRONT_PROC := $(patsubst $(SRC)/%.pdf,$(PROCESSDIR)/%-cropped.pdf,$(FRONT))
+BACK_PROC := $(patsubst $(SRC)/%.pdf,$(PROCESSDIR)/%-cropped.pdf,$(BACK))
+FINAL_PDFS := $(FRONT_PROC) $(MIDDLE) $(BACK_PROC)
+
+all: $(OCR_OUTPUT)
 
 $(IMAGEDIR):
 	@mkdir -p $(IMAGEDIR)
 
-$(CROPPEDDIR):
-	@mkdir -p $(CROPPEDDIR)
+$(PROCESSDIR):
+	@mkdir -p $(PROCESSDIR)
 
-$(IMAGEDIR)/%-extract.stamp: $(SRC)/%.pdf | $(IMAGEDIR)
+# we extract only front and back
+IMAGETARGETS := $(IMAGEDIR)/front-extract.stamp $(IMAGEDIR)/back-extract.stamp
+$(IMAGETARGETS): $(IMAGEDIR)/%-extract.stamp: $(SRC)/%.pdf | $(IMAGEDIR)
 	@echo "Extracting images from $< into $(IMAGEDIR)"
 	pdfimages -png $< $(IMAGEDIR)/$*
 	@touch $@
 
+# all extracted are then cropped
 $(IMAGEDIR)/%-cropped.stamp: $(IMAGEDIR)/%-extract.stamp
 	@echo "Cropping images for $*..."
 	@for img in $(IMAGEDIR)/$*-[0-9][0-9][0-9].png; do \
@@ -52,7 +62,7 @@ $(IMAGEDIR)/%-cropped.stamp: $(IMAGEDIR)/%-extract.stamp
 	done
 	@touch $@
 
-# inplace overwrite
+# and maybe rotated inplace overwrite
 $(IMAGEDIR)/%-rotate.stamp: $(IMAGEDIR)/%-cropped.stamp
 	@echo "Rotating images for $*..."
 	@case "$*" in (front|back)\
@@ -73,10 +83,11 @@ crop-%: $(IMAGEDIR)/%-cropped.stamp
 rotate-%: $(IMAGEDIR)/%-rotate.stamp
 	@echo "$* rotated"
 
-merge-%: $(CROPPEDDIR)/%-cropped.pdf
+merge-%: $(PROCESSDIR)/%-cropped.pdf
 	@echo "$* merged"
 
-$(CROPPEDDIR)/%-cropped.pdf: $(IMAGEDIR)/%-rotate.stamp | $(CROPPEDDIR)
+# and reassembled
+$(PROCESSDIR)/%-cropped.pdf: $(IMAGEDIR)/%-rotate.stamp | $(PROCESSDIR)
 	@echo "Merging cropped images for $* into $@"
 	@files=$$(ls $(IMAGEDIR)/$*-*-cropped.png 2>/dev/null); \
 	if [ -z "$$files" ]; then \
@@ -86,26 +97,26 @@ $(CROPPEDDIR)/%-cropped.pdf: $(IMAGEDIR)/%-rotate.stamp | $(CROPPEDDIR)
 	convert $${files} $@
 
 # --- Final PDF Creation ---
-# Merge all the cropped PDFs in the order specified by ORDERED.
 $(OUTPUT): $(FINAL_PDFS)
 	@echo "Merging the following PDFs into $(OUTPUT):"
 	@echo $(FINAL_PDFS)
 	pdfunite $(FINAL_PDFS) $(OUTPUT)
-	@echo "Final PDF created: $(OUTPUT)"
 
-process: create_final crop2pdf crop_all extract_all
-	@echo "Master Process Done"
+$(OPT_OUTPUT): $(OUTPUT)
+	ocrmypdf --tesseract-timeout=0 --optimize $(OPTIMIZE) --deskew --skip-text $< $@
 
-compress: $(OUTPUT)
-	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/screen -dNOPAUSE -dQUIET -dBATCH -sOutputFile=$(basename $<)_compressed.pdf $<
-
-ocr: $(OUTPUT)
-	ocrmypdf -l deu --optimize 1 --deskew --clean --output-type pdfa $< $(basename $<)_ocr.pdf --sidecar $(basename $<).txt
-
+$(OCR_OUTPUT): $(OPT_OUTPUT)
+	pdfinfo $(OUTPUT) \
+	last_page=$$(pdfinfo "$(OUTPUT)" | grep "Pages" | awk '{print $$2}') \
+	echo $$last_page \
+	ocrmypdf -l deu --optimize 1 --deskew --clean --pages 2-$$((last_page-1)) --output-type pdfa $< $@ --sidecar $(basename $@).txt
 
 # === Clean-up ===
 clean:
-	rm -rf $(IMAGEDIR) $(CROPPEDDIR)
+	rm -rf $(IMAGEDIR) $(PROCESSDIR)
 
 clean-pdf:
-	rm -rf $(OUTPUT)
+	rm -rf $(basename $(OUTPUT))*
+
+clean-all: clean clean-pdf
+

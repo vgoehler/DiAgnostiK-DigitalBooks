@@ -1,5 +1,8 @@
-# DiAgnostiK - Projekt
-## Buch scan tool
+# DiAgnostiK -- Digital Books
+
+## Information
+
+A makefile to clean up, stitch together, and read a scanned book.
 
 ### Prerequisites
 
@@ -12,14 +15,19 @@
 
     - for ocr: `ocrmypdf --clean`
 
-- `apt install ghostscript`
+- `apt install pngquant`
 
-    - for `gs`
+    - for optimize 2 and 3: `ocrmypdf --optimize 3`
+
+- `apt install jbig2`
+
+    - also for optimize 2 and 3
 
 - `apt install poppler`
     
     - for `pdfimages`
     - for `pdfunite`
+    - for `pdfinfo`
 
 - `apt install imagemagick`
 
