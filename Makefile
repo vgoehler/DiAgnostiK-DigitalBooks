@@ -16,7 +16,7 @@ IMAGEDIR := extracted_images
 PROCESSDIR := cropped_pdfs
 SRC := source
 
-# Flags for Rotation
+# Flags for 180 degree Rotation
 
 ROTATE_FRONT ?= 0
 ROTATE_BACK ?= 0
@@ -63,10 +63,11 @@ $(IMAGEDIR)/%-cropped.stamp: $(IMAGEDIR)/%-extract.stamp
 	@touch $@
 
 # and maybe rotated inplace overwrite
+# ISSUE: if the scanned image has rotate flags, then these are lost in the process
 $(IMAGEDIR)/%-rotate.stamp: $(IMAGEDIR)/%-cropped.stamp
 	@echo "Rotating images for $*..."
 	@case "$*" in (front|back)\
-		if [ "$*" = "front" ] && [ "$(ROTATE_FRONT)" -eq "1" ] || \
+		if ( [ "$*" = "front" ] && [ "$(ROTATE_FRONT)" -eq "1" ] ) || \
 		   ( [ "$*" = "back"  ] && [ "$(ROTATE_BACK)" -eq "1" ] ); then \
 			for img in $(IMAGEDIR)/$*-*-cropped.png; do \
 				echo "  Rotating $$img in place"; \
