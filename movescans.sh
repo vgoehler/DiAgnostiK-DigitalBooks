@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PDF_FOLDER="$1"
-START_NUMBER=4
+START_NUMBER=16
 
 if [ -z "$PDF_FOLDER" ]; then
     echo "Usage: $0 <path_to_pdf_folder>"

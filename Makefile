@@ -60,6 +60,15 @@ $(IMAGEDIR)/%-cropped.stamp: $(IMAGEDIR)/%-extract.stamp
 	        convert $$img -trim +repage $$cropped; \
 	    fi; \
 	done
+	find $(IMAGEDIR) -type f -name '*.png' | while read img; do \
+		dim=$$(identify -format "%w %h" "$$img"); \
+		w=$$(echo $${dim} | cut -d' ' -f1); \
+		h=$$(echo $${dim} | cut -d' ' -f2); \
+		if [ "$$w" -lt 100 ] || [ "$$h" -lt 100 ]; then \
+			echo "Removing small image: $${img} ($$w x $$h)"; \
+			rm "$${img}"; \
+		fi; \
+	done
 	@touch $@
 
 # and maybe rotated inplace overwrite
